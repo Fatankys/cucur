@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hitung Cucur</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 24px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .note {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+        .history {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f1f1f1;
+        }
+        .history h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .history ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .history ul li {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .clear-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .clear-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hitung Cucur</h1>
+        <form id="cucurForm">
+            <div class="form-group">
+                <label for="day">Hari:</label>
+                <input type="text" id="day" placeholder="Masukkan nama hari (contoh: Senin)" required>
+            </div>
+            <div class="form-group">
+                <label for="remainingCakes">Penjualan Hari Ini:</label>
+                <input type="number" id="remainingCakes" placeholder="Masukkan jumlah cucur hari ini" required>
+            </div>
+            <div class="form-group">
+                <label for="cakesSold">Sisanya:</label>
+                <input type="number" id="cakesSold" placeholder="Masukkan sisa cucur" required>
+            </div>
+            <button type="button" onclick="updateRemainingCakes()">Hitung</button>
+        </form>
+        <div id="result" class="note"></div>
+        
+        <div class="history" id="history">
+            <h2>Riwayat Sisa Cucur</h2>
+            <ul id="historyList">
+                <!-- Riwayat akan ditampilkan di sini -->
+            </ul>
+            <p><strong>Total Sisa Cucur Mingguan:</strong> <span id="totalRemainingCakes">0</span></p>
+        </div>
+        <button class="clear-btn" onclick="clearHistory()">Clear Riwayat</button>
+        <p class="note">Catatan: Pastikan data yang dimasukkan sudah benar.</p>
+    </div>
+
+    <script>
+        const historyList = document.getElementById('historyList');
+        const totalRemainingCakesElement = document.getElementById('totalRemainingCakes');
+        let totalRemainingCakes = 0;
+
+        // Muat riwayat dari localStorage
+        window.onload = function () {
+            const savedHistory = JSON.parse(localStorage.getItem('cakeHistory')) || [];
+            const savedTotal = parseInt(localStorage.getItem('totalRemainingCakes')) || 0;
+
+            savedHistory.forEach(item => {
+                const historyItem = document.createElement('li');
+                historyItem.textContent = item;
+                historyList.appendChild(historyItem);
+            });
+
+            totalRemainingCakes = savedTotal;
+            totalRemainingCakesElement.textContent = totalRemainingCakes;
+        };
+
+        function updateRemainingCakes() {
+            const day = document.getElementById('day').value.trim();
+            const remainingCakes = parseInt(document.getElementById('remainingCakes').value) || 0;
+            const cakesSold = parseInt(document.getElementById('cakesSold').value) || 0;
+
+            if (cakesSold > remainingCakes) {
+                document.getElementById('result').innerHTML = "Error: Sisa tidak boleh lebih besar dari penjualan hari ini.";
+                document.getElementById('result').style.color = 'red';
+            } else {
+                const total = remainingCakes - cakesSold;
+                document.getElementById('result').innerHTML = `Total Penjualan Setelah Pengurangan: ${total}`;
+                document.getElementById('result').style.color = 'green';
+
+                const historyText = `Hari ${day}: Penjualan ${remainingCakes}, Sisa ${cakesSold}, Total ${total}`;
+
+                // Tambahkan ke riwayat
+                const historyItem = document.createElement('li');
+                historyItem.textContent = historyText;
+                historyList.appendChild(historyItem);
+
+                // Simpan ke localStorage
+                const savedHistory = JSON.parse(localStorage.getItem('cakeHistory')) || [];
+                savedHistory.push(historyText);
+                localStorage.setItem('cakeHistory', JSON.stringify(savedHistory));
+
+                // Tambahkan ke total
+                totalRemainingCakes += total;
+                totalRemainingCakesElement.textContent = totalRemainingCakes;
+
+                // Simpan total ke localStorage
+                localStorage.setItem('totalRemainingCakes', totalRemainingCakes);
+
+                // Reset form
+                document.getElementById('cucurForm').reset();
+            }
+        }
+
+        // Fungsi untuk menghapus riwayat
+        function clearHistory() {
+            // Hapus riwayat dan total dari localStorage
+            localStorage.removeItem('cakeHistory');
+            localStorage.removeItem('totalRemainingCakes');
+
+            // Reset tampilan riwayat dan total
+            historyList.innerHTML = '';
+            totalRemainingCakes = 0;
+            totalRemainingCakesElement.textContent = totalRemainingCakes;
+        }
+    </script>
+</body>
+</html>
